@@ -63,6 +63,11 @@ func main() {
 	}
 	defer pool.Close()
 
+	// Run database migrations at startup to ensure schema is up-to-date
+	if err := database.RunMigrations(ctx, pool, "migrations"); err != nil {
+		logger.Fatal("failed to run migrations", zap.Error(err))
+	}
+
 	// Repositories
 	userRepo := postgres.NewUserRepo(pool)
 	noteRepo := postgres.NewNoteRepo(pool)
