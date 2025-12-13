@@ -236,6 +236,28 @@ func TestService_GetByID(t *testing.T) {
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
 	})
+
+	t.Run("returns not found for deleted note", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		noteRepo := mocks.NewMockNoteRepository(ctrl)
+		photoRepo := mocks.NewMockPhotoRepository(ctrl)
+		svc := note.NewService(noteRepo, photoRepo)
+
+		ctx := context.Background()
+		userID := uuid.New()
+		noteID := uuid.New()
+		deletedAt := time.Now()
+		n := &entity.Note{ID: noteID, UserID: userID, DeletedAt: &deletedAt}
+
+		noteRepo.EXPECT().GetByID(ctx, noteID).Return(n, nil)
+
+		result, err := svc.GetByID(ctx, userID, noteID)
+
+		assert.Nil(t, result)
+		assert.ErrorIs(t, err, domain.ErrNoteNotFound)
+	})
 }
 
 func TestService_Update(t *testing.T) {

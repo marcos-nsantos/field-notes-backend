@@ -90,6 +90,10 @@ func (s *Service) GetByID(ctx context.Context, userID, noteID uuid.UUID) (*entit
 		return nil, domain.ErrForbidden
 	}
 
+	if note.IsDeleted() {
+		return nil, domain.ErrNoteNotFound
+	}
+
 	photos, err := s.photoRepo.GetByNoteID(ctx, noteID)
 	if err != nil {
 		return nil, fmt.Errorf("loading photos: %w", err)
