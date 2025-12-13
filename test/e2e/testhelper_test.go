@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/marcos-nsantos/field-notes-backend/internal/adapter/handler"
 	pgRepo "github.com/marcos-nsantos/field-notes-backend/internal/adapter/repository/postgres"
 	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/auth"
+	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/database"
 	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/middleware"
 	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/server"
 	authUC "github.com/marcos-nsantos/field-notes-backend/internal/usecase/auth"
@@ -78,7 +80,8 @@ func setupTestApp(t *testing.T) *TestApp {
 	require.NoError(t, err)
 
 	// Run migrations
-	err = runMigrations(ctx, pool)
+	migrationsPath := getMigrationsPath()
+	err = database.RunMigrations(ctx, pool, migrationsPath)
 	require.NoError(t, err)
 
 	// Initialize repositories
@@ -235,77 +238,9 @@ func (s *stubImageProcessor) Process(reader io.Reader, contentType string) (io.R
 	return bytes.NewReader(data), int64(len(data)), 800, 600, nil
 }
 
-// runMigrations executes database migrations for e2e tests
-func runMigrations(ctx context.Context, pool *pgxpool.Pool) error {
-	migrations := []string{
-		`CREATE EXTENSION IF NOT EXISTS postgis`,
-		`CREATE TABLE IF NOT EXISTS users (
-			id UUID PRIMARY KEY,
-			email VARCHAR(255) NOT NULL UNIQUE,
-			password_hash VARCHAR(255) NOT NULL,
-			name VARCHAR(255) NOT NULL,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-		)`,
-		`CREATE TABLE IF NOT EXISTS notes (
-			id UUID PRIMARY KEY,
-			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			title VARCHAR(255) NOT NULL,
-			content TEXT NOT NULL,
-			location GEOGRAPHY(POINT, 4326),
-			altitude DOUBLE PRECISION,
-			accuracy DOUBLE PRECISION,
-			client_id VARCHAR(255),
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			deleted_at TIMESTAMPTZ,
-			UNIQUE(user_id, client_id)
-		)`,
-		`CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id)`,
-		`CREATE INDEX IF NOT EXISTS idx_notes_location ON notes USING GIST(location)`,
-		`CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at)`,
-		`CREATE TABLE IF NOT EXISTS photos (
-			id UUID PRIMARY KEY,
-			note_id UUID NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
-			url VARCHAR(500) NOT NULL,
-			key VARCHAR(255) NOT NULL,
-			mime_type VARCHAR(100) NOT NULL,
-			size BIGINT NOT NULL,
-			width INT,
-			height INT,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-		)`,
-		`CREATE INDEX IF NOT EXISTS idx_photos_note_id ON photos(note_id)`,
-		`CREATE TABLE IF NOT EXISTS devices (
-			id UUID PRIMARY KEY,
-			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			device_id VARCHAR(255) NOT NULL,
-			platform VARCHAR(50) NOT NULL,
-			name VARCHAR(255) NOT NULL,
-			sync_cursor TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01',
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			UNIQUE(user_id, device_id)
-		)`,
-		`CREATE INDEX IF NOT EXISTS idx_devices_user_id ON devices(user_id)`,
-		`CREATE TABLE IF NOT EXISTS refresh_tokens (
-			id UUID PRIMARY KEY,
-			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
-			token VARCHAR(255) NOT NULL UNIQUE,
-			expires_at TIMESTAMPTZ NOT NULL,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			revoked_at TIMESTAMPTZ
-		)`,
-		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)`,
-		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_device_id ON refresh_tokens(device_id)`,
-	}
-
-	for _, migration := range migrations {
-		if _, err := pool.Exec(ctx, migration); err != nil {
-			return fmt.Errorf("failed to run migration: %w", err)
-		}
-	}
-
-	return nil
+// getMigrationsPath returns the absolute path to the migrations directory
+func getMigrationsPath() string {
+	_, filename, _, _ := runtime.Caller(0)
+	testDir := filepath.Dir(filename)
+	return filepath.Join(testDir, "..", "..", "migrations")
 }
