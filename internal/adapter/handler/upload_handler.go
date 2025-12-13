@@ -23,6 +23,22 @@ func NewUploadHandler(uploadSvc UploadService) *UploadHandler {
 	return &UploadHandler{uploadSvc: uploadSvc}
 }
 
+// Upload godoc
+//
+//	@Summary		Upload image to note
+//	@Description	Upload an image file (JPEG/PNG) to a note
+//	@Tags			upload
+//	@Security		BearerAuth
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			note_id	path		string	true	"Note ID"	format(uuid)
+//	@Param			file	formData	file	true	"Image file (max 10MB)"
+//	@Success		201		{object}	response.UploadResponse
+//	@Failure		400		{object}	httputil.ErrorResponse	"Invalid file or note ID"
+//	@Failure		401		{object}	httputil.ErrorResponse
+//	@Failure		403		{object}	httputil.ErrorResponse
+//	@Failure		404		{object}	httputil.ErrorResponse
+//	@Router			/upload/{note_id} [post]
 func (h *UploadHandler) Upload(c *gin.Context) {
 	noteID, err := uuid.Parse(c.Param("note_id"))
 	if err != nil {
@@ -70,6 +86,19 @@ func (h *UploadHandler) Upload(c *gin.Context) {
 	httputil.Created(c, response.UploadResultToResponse(result))
 }
 
+// Delete godoc
+//
+//	@Summary		Delete a photo
+//	@Description	Delete a photo from a note
+//	@Tags			upload
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Photo ID"	format(uuid)
+//	@Success		204	"No content"
+//	@Failure		400	{object}	httputil.ErrorResponse
+//	@Failure		401	{object}	httputil.ErrorResponse
+//	@Failure		403	{object}	httputil.ErrorResponse
+//	@Failure		404	{object}	httputil.ErrorResponse
+//	@Router			/photos/{id} [delete]
 func (h *UploadHandler) Delete(c *gin.Context) {
 	photoID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

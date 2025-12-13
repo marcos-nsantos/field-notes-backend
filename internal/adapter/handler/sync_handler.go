@@ -22,6 +22,19 @@ func NewSyncHandler(syncSvc SyncService) *SyncHandler {
 	return &SyncHandler{syncSvc: syncSvc}
 }
 
+// Sync godoc
+//
+//	@Summary		Sync notes
+//	@Description	Sync notes between client and server using last-write-wins strategy
+//	@Tags			sync
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		request.SyncRequest	true	"Sync data with client notes"
+//	@Success		200		{object}	response.SyncResponse
+//	@Failure		400		{object}	httputil.ErrorResponse	"Device not found or validation error"
+//	@Failure		401		{object}	httputil.ErrorResponse
+//	@Router			/sync [post]
 func (h *SyncHandler) Sync(c *gin.Context) {
 	var req request.SyncRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

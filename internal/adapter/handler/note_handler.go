@@ -23,6 +23,19 @@ func NewNoteHandler(noteSvc NoteService) *NoteHandler {
 	return &NoteHandler{noteSvc: noteSvc}
 }
 
+// Create godoc
+//
+//	@Summary		Create a new note
+//	@Description	Create a new note with optional location
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		request.CreateNoteRequest	true	"Note data"
+//	@Success		201		{object}	response.NoteResponse
+//	@Failure		400		{object}	httputil.ErrorResponse
+//	@Failure		401		{object}	httputil.ErrorResponse
+//	@Router			/notes [post]
 func (h *NoteHandler) Create(c *gin.Context) {
 	var req request.CreateNoteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -56,6 +69,23 @@ func (h *NoteHandler) Create(c *gin.Context) {
 	httputil.Created(c, response.NoteFromEntity(n))
 }
 
+// List godoc
+//
+//	@Summary		List notes
+//	@Description	Get paginated list of notes with optional bounding box filter
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			page		query		int		false	"Page number"		default(1)
+//	@Param			per_page	query		int		false	"Items per page"	default(20)
+//	@Param			min_lat		query		number	false	"Minimum latitude for bounding box"
+//	@Param			max_lat		query		number	false	"Maximum latitude for bounding box"
+//	@Param			min_lng		query		number	false	"Minimum longitude for bounding box"
+//	@Param			max_lng		query		number	false	"Maximum longitude for bounding box"
+//	@Success		200			{object}	response.NotesListResponse
+//	@Failure		400			{object}	httputil.ErrorResponse
+//	@Failure		401			{object}	httputil.ErrorResponse
+//	@Router			/notes [get]
 func (h *NoteHandler) List(c *gin.Context) {
 	var req request.ListNotesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -91,6 +121,20 @@ func (h *NoteHandler) List(c *gin.Context) {
 	})
 }
 
+// Get godoc
+//
+//	@Summary		Get note by ID
+//	@Description	Get a single note by its ID
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		string	true	"Note ID"	format(uuid)
+//	@Success		200	{object}	response.NoteResponse
+//	@Failure		400	{object}	httputil.ErrorResponse
+//	@Failure		401	{object}	httputil.ErrorResponse
+//	@Failure		403	{object}	httputil.ErrorResponse
+//	@Failure		404	{object}	httputil.ErrorResponse
+//	@Router			/notes/{id} [get]
 func (h *NoteHandler) Get(c *gin.Context) {
 	noteID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -116,6 +160,22 @@ func (h *NoteHandler) Get(c *gin.Context) {
 	httputil.OK(c, response.NoteFromEntity(n))
 }
 
+// Update godoc
+//
+//	@Summary		Update a note
+//	@Description	Update an existing note
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"Note ID"	format(uuid)
+//	@Param			request	body		request.UpdateNoteRequest	true	"Note data to update"
+//	@Success		200		{object}	response.NoteResponse
+//	@Failure		400		{object}	httputil.ErrorResponse
+//	@Failure		401		{object}	httputil.ErrorResponse
+//	@Failure		403		{object}	httputil.ErrorResponse
+//	@Failure		404		{object}	httputil.ErrorResponse
+//	@Router			/notes/{id} [put]
 func (h *NoteHandler) Update(c *gin.Context) {
 	noteID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -160,6 +220,19 @@ func (h *NoteHandler) Update(c *gin.Context) {
 	httputil.OK(c, response.NoteFromEntity(n))
 }
 
+// Delete godoc
+//
+//	@Summary		Delete a note
+//	@Description	Soft delete a note
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Note ID"	format(uuid)
+//	@Success		204	"No content"
+//	@Failure		400	{object}	httputil.ErrorResponse
+//	@Failure		401	{object}	httputil.ErrorResponse
+//	@Failure		403	{object}	httputil.ErrorResponse
+//	@Failure		404	{object}	httputil.ErrorResponse
+//	@Router			/notes/{id} [delete]
 func (h *NoteHandler) Delete(c *gin.Context) {
 	noteID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

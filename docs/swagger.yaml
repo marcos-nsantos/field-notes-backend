@@ -1,0 +1,724 @@
+basePath: /api/v1
+definitions:
+  httputil.ErrorResponse:
+    properties:
+      code:
+        type: string
+      error:
+        type: string
+      request_id:
+        type: string
+    type: object
+  request.CreateNoteRequest:
+    properties:
+      accuracy:
+        minimum: 0
+        type: number
+      altitude:
+        type: number
+      client_id:
+        maxLength: 36
+        type: string
+      content:
+        type: string
+      latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+      title:
+        maxLength: 255
+        type: string
+    required:
+    - content
+    - title
+    type: object
+  request.LoginRequest:
+    properties:
+      device_id:
+        maxLength: 255
+        type: string
+      device_name:
+        maxLength: 255
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+      platform:
+        enum:
+        - ios
+        - android
+        - web
+        type: string
+    required:
+    - device_id
+    - email
+    - password
+    - platform
+    type: object
+  request.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  request.RegisterRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      password:
+        maxLength: 72
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  request.SyncNote:
+    properties:
+      accuracy:
+        minimum: 0
+        type: number
+      altitude:
+        type: number
+      client_id:
+        maxLength: 36
+        type: string
+      content:
+        type: string
+      is_deleted:
+        type: boolean
+      latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+      title:
+        maxLength: 255
+        type: string
+      updated_at:
+        type: string
+    required:
+    - client_id
+    - content
+    - title
+    - updated_at
+    type: object
+  request.SyncRequest:
+    properties:
+      device_id:
+        maxLength: 255
+        type: string
+      notes:
+        items:
+          $ref: '#/definitions/request.SyncNote'
+        type: array
+      sync_cursor:
+        type: string
+    required:
+    - device_id
+    type: object
+  request.UpdateNoteRequest:
+    properties:
+      accuracy:
+        minimum: 0
+        type: number
+      altitude:
+        type: number
+      content:
+        type: string
+      latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+      title:
+        maxLength: 255
+        type: string
+    type: object
+  response.ConflictResponse:
+    properties:
+      client_id:
+        type: string
+      resolution:
+        type: string
+      server_version:
+        $ref: '#/definitions/response.NoteResponse'
+    type: object
+  response.LocationResponse:
+    properties:
+      accuracy:
+        type: number
+      altitude:
+        type: number
+      latitude:
+        type: number
+      longitude:
+        type: number
+    type: object
+  response.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/response.UserResponse'
+    type: object
+  response.NoteResponse:
+    properties:
+      client_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      location:
+        $ref: '#/definitions/response.LocationResponse'
+      photos:
+        items:
+          $ref: '#/definitions/response.PhotoResponse'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  response.NotesListResponse:
+    properties:
+      notes:
+        items:
+          $ref: '#/definitions/response.NoteResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    type: object
+  response.PaginationResponse:
+    properties:
+      has_next:
+        type: boolean
+      has_prev:
+        type: boolean
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  response.PhotoResponse:
+    properties:
+      created_at:
+        type: string
+      height:
+        type: integer
+      id:
+        type: string
+      mime_type:
+        type: string
+      size:
+        type: integer
+      url:
+        type: string
+      width:
+        type: integer
+    type: object
+  response.RefreshResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  response.SyncResponse:
+    properties:
+      conflicts:
+        items:
+          $ref: '#/definitions/response.ConflictResponse'
+        type: array
+      new_cursor:
+        type: string
+      server_notes:
+        items:
+          $ref: '#/definitions/response.NoteResponse'
+        type: array
+    type: object
+  response.UploadResponse:
+    properties:
+      photo:
+        $ref: '#/definitions/response.PhotoResponse'
+      signed_url:
+        type: string
+      url:
+        type: string
+    type: object
+  response.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Marcos Santos
+    url: https://github.com/marcos-nsantos
+  description: Backend API for Field Notes mobile app - offline-first note taking
+    with sync.
+  license:
+    name: MIT
+  title: Field Notes API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Revoke all refresh tokens for the user
+      responses:
+        "204":
+          description: No content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Get new access token using refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.RefreshResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Token expired/revoked/invalid
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: Registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "409":
+          description: Email already exists
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /notes:
+    get:
+      description: Get paginated list of notes with optional bounding box filter
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      - description: Minimum latitude for bounding box
+        in: query
+        name: min_lat
+        type: number
+      - description: Maximum latitude for bounding box
+        in: query
+        name: max_lat
+        type: number
+      - description: Minimum longitude for bounding box
+        in: query
+        name: min_lng
+        type: number
+      - description: Maximum longitude for bounding box
+        in: query
+        name: max_lng
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.NotesListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List notes
+      tags:
+      - notes
+    post:
+      consumes:
+      - application/json
+      description: Create a new note with optional location
+      parameters:
+      - description: Note data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateNoteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.NoteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new note
+      tags:
+      - notes
+  /notes/{id}:
+    delete:
+      description: Soft delete a note
+      parameters:
+      - description: Note ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a note
+      tags:
+      - notes
+    get:
+      description: Get a single note by its ID
+      parameters:
+      - description: Note ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.NoteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get note by ID
+      tags:
+      - notes
+    put:
+      consumes:
+      - application/json
+      description: Update an existing note
+      parameters:
+      - description: Note ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Note data to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateNoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.NoteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a note
+      tags:
+      - notes
+  /photos/{id}:
+    delete:
+      description: Delete a photo from a note
+      parameters:
+      - description: Photo ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a photo
+      tags:
+      - upload
+  /sync:
+    post:
+      consumes:
+      - application/json
+      description: Sync notes between client and server using last-write-wins strategy
+      parameters:
+      - description: Sync data with client notes
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.SyncRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SyncResponse'
+        "400":
+          description: Device not found or validation error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Sync notes
+      tags:
+      - sync
+  /upload/{note_id}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload an image file (JPEG/PNG) to a note
+      parameters:
+      - description: Note ID
+        format: uuid
+        in: path
+        name: note_id
+        required: true
+        type: string
+      - description: Image file (max 10MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.UploadResponse'
+        "400":
+          description: Invalid file or note ID
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload image to note
+      tags:
+      - upload
+securityDefinitions:
+  BearerAuth:
+    description: Enter "Bearer {token}" to authenticate
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

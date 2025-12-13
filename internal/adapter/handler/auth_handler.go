@@ -21,6 +21,18 @@ func NewAuthHandler(authSvc AuthService) *AuthHandler {
 	return &AuthHandler{authSvc: authSvc}
 }
 
+// Register godoc
+//
+//	@Summary		Register a new user
+//	@Description	Create a new user account
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		request.RegisterRequest	true	"Registration data"
+//	@Success		201		{object}	response.UserResponse
+//	@Failure		400		{object}	httputil.ErrorResponse
+//	@Failure		409		{object}	httputil.ErrorResponse	"Email already exists"
+//	@Router			/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req request.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -45,6 +57,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	httputil.Created(c, response.UserFromEntity(user))
 }
 
+// Login godoc
+//
+//	@Summary		Login user
+//	@Description	Authenticate user and return tokens
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		request.LoginRequest	true	"Login credentials"
+//	@Success		200		{object}	response.LoginResponse
+//	@Failure		400		{object}	httputil.ErrorResponse
+//	@Failure		401		{object}	httputil.ErrorResponse	"Invalid credentials"
+//	@Router			/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req request.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -76,6 +100,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+// Refresh godoc
+//
+//	@Summary		Refresh access token
+//	@Description	Get new access token using refresh token
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		request.RefreshRequest	true	"Refresh token"
+//	@Success		200		{object}	response.RefreshResponse
+//	@Failure		400		{object}	httputil.ErrorResponse
+//	@Failure		401		{object}	httputil.ErrorResponse	"Token expired/revoked/invalid"
+//	@Router			/auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req request.RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -105,6 +141,15 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	})
 }
 
+// Logout godoc
+//
+//	@Summary		Logout user
+//	@Description	Revoke all refresh tokens for the user
+//	@Tags			auth
+//	@Security		BearerAuth
+//	@Success		204	"No content"
+//	@Failure		401	{object}	httputil.ErrorResponse
+//	@Router			/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	userID := httputil.GetUserID(c)
 	if err := h.authSvc.Logout(c.Request.Context(), userID); err != nil {

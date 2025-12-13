@@ -9,6 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
+	_ "github.com/marcos-nsantos/field-notes-backend/docs"
 	"github.com/marcos-nsantos/field-notes-backend/internal/adapter/handler"
 	"github.com/marcos-nsantos/field-notes-backend/internal/adapter/repository/postgres"
 	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/auth"
@@ -23,6 +24,23 @@ import (
 	"github.com/marcos-nsantos/field-notes-backend/internal/usecase/sync"
 	"github.com/marcos-nsantos/field-notes-backend/internal/usecase/upload"
 )
+
+//	@title			Field Notes API
+//	@version		1.0
+//	@description	Backend API for Field Notes mobile app - offline-first note taking with sync.
+
+//	@contact.name	Marcos Santos
+//	@contact.url	https://github.com/marcos-nsantos
+
+//	@license.name	MIT
+
+//	@host		localhost:8080
+//	@BasePath	/api/v1
+
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Enter "Bearer {token}" to authenticate
 
 func main() {
 	cfg, err := config.Load()

@@ -1,4 +1,4 @@
-.PHONY: build run test test-unit test-integration lint clean docker-up docker-down migrate-up migrate-down mocks
+.PHONY: build run test test-unit test-integration lint clean docker-up docker-down migrate-up migrate-down mocks swagger
 
 # Go parameters
 BINARY_NAME=api
@@ -67,12 +67,17 @@ migrate-create:
 	@read -p "Migration name: " name; \
 	migrate create -ext sql -dir migrations -seq $$name
 
+# Generate swagger documentation
+swagger:
+	swag init -g cmd/api/main.go -o docs
+
 # Install development tools
 tools:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	go install go.uber.org/mock/mockgen@latest
+	go install github.com/swaggo/swag/cmd/swag@latest
 
 # Tidy dependencies
 tidy:
