@@ -8,11 +8,13 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-	S3       S3Config
-	Log      LogConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	Redis     RedisConfig
+	JWT       JWTConfig
+	S3        S3Config
+	Log       LogConfig
+	RateLimit RateLimitConfig
 }
 
 type ServerConfig struct {
@@ -61,6 +63,24 @@ type S3Config struct {
 type LogConfig struct {
 	Level  string `envconfig:"LOG_LEVEL" default:"info"`
 	Format string `envconfig:"LOG_FORMAT" default:"json"`
+}
+
+type RedisConfig struct {
+	Host     string `envconfig:"REDIS_HOST" default:"localhost"`
+	Port     int    `envconfig:"REDIS_PORT" default:"6379"`
+	Password string `envconfig:"REDIS_PASSWORD" default:""`
+	DB       int    `envconfig:"REDIS_DB" default:"0"`
+}
+
+func (c RedisConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Host, c.Port)
+}
+
+type RateLimitConfig struct {
+	Enabled         bool          `envconfig:"RATE_LIMIT_ENABLED" default:"true"`
+	RequestsPerMin  int           `envconfig:"RATE_LIMIT_REQUESTS_PER_MIN" default:"100"`
+	BurstSize       int           `envconfig:"RATE_LIMIT_BURST_SIZE" default:"10"`
+	CleanupInterval time.Duration `envconfig:"RATE_LIMIT_CLEANUP_INTERVAL" default:"1m"`
 }
 
 func Load() (*Config, error) {

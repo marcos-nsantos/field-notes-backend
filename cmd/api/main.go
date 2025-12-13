@@ -13,6 +13,7 @@ import (
 	"github.com/marcos-nsantos/field-notes-backend/internal/adapter/handler"
 	"github.com/marcos-nsantos/field-notes-backend/internal/adapter/repository/postgres"
 	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/auth"
+	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/cache"
 	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/config"
 	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/database"
 	"github.com/marcos-nsantos/field-notes-backend/internal/infrastructure/middleware"
@@ -79,6 +80,17 @@ func main() {
 	}
 	imageProcessor := storage.NewImageProcessor()
 
+	// Rate limiter
+	var rateLimiter *middleware.RateLimiter
+	if cfg.RateLimit.Enabled {
+		redisClient, err := cache.NewRedisClient(cfg.Redis)
+		if err != nil {
+			logger.Fatal("failed to connect to redis", zap.Error(err))
+		}
+		defer redisClient.Close()
+		rateLimiter = middleware.NewRateLimiter(redisClient, cfg.RateLimit)
+	}
+
 	// Use cases
 	authSvc := authUC.NewService(userRepo, deviceRepo, refreshTokenRepo, jwtSvc, passwordHasher, cfg.JWT.RefreshTokenTTL)
 	noteSvc := note.NewService(noteRepo, photoRepo)
@@ -96,13 +108,15 @@ func main() {
 
 	// Router
 	router := server.NewRouter(server.RouterConfig{
-		AuthHandler:    authHandler,
-		NoteHandler:    noteHandler,
-		SyncHandler:    syncHandler,
-		UploadHandler:  uploadHandler,
-		AuthMiddleware: authMiddleware,
-		Logger:         logger,
-		Environment:    cfg.Server.Environment,
+		AuthHandler:     authHandler,
+		NoteHandler:     noteHandler,
+		SyncHandler:     syncHandler,
+		UploadHandler:   uploadHandler,
+		AuthMiddleware:  authMiddleware,
+		RateLimiter:     rateLimiter,
+		RateLimitEnable: cfg.RateLimit.Enabled,
+		Logger:          logger,
+		Environment:     cfg.Server.Environment,
 	})
 
 	// Server

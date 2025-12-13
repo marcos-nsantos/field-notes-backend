@@ -16,6 +16,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: fieldnotes-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   minio:
     image: minio/minio:latest
     container_name: fieldnotes-minio
@@ -72,8 +85,14 @@ services:
       - S3_PUBLIC_URL=http://localhost:9000/fieldnotes
       - LOG_LEVEL=debug
       - LOG_FORMAT=console
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_REQUESTS_PER_MIN=100
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -81,4 +100,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   minio_data:

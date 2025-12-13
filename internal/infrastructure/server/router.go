@@ -11,23 +11,27 @@ import (
 )
 
 type Router struct {
-	engine         *gin.Engine
-	authHandler    *handler.AuthHandler
-	noteHandler    *handler.NoteHandler
-	syncHandler    *handler.SyncHandler
-	uploadHandler  *handler.UploadHandler
-	authMiddleware *middleware.AuthMiddleware
-	logger         *zap.Logger
+	engine          *gin.Engine
+	authHandler     *handler.AuthHandler
+	noteHandler     *handler.NoteHandler
+	syncHandler     *handler.SyncHandler
+	uploadHandler   *handler.UploadHandler
+	authMiddleware  *middleware.AuthMiddleware
+	rateLimiter     *middleware.RateLimiter
+	rateLimitEnable bool
+	logger          *zap.Logger
 }
 
 type RouterConfig struct {
-	AuthHandler    *handler.AuthHandler
-	NoteHandler    *handler.NoteHandler
-	SyncHandler    *handler.SyncHandler
-	UploadHandler  *handler.UploadHandler
-	AuthMiddleware *middleware.AuthMiddleware
-	Logger         *zap.Logger
-	Environment    string
+	AuthHandler     *handler.AuthHandler
+	NoteHandler     *handler.NoteHandler
+	SyncHandler     *handler.SyncHandler
+	UploadHandler   *handler.UploadHandler
+	AuthMiddleware  *middleware.AuthMiddleware
+	RateLimiter     *middleware.RateLimiter
+	RateLimitEnable bool
+	Logger          *zap.Logger
+	Environment     string
 }
 
 func NewRouter(cfg RouterConfig) *Router {
@@ -38,13 +42,15 @@ func NewRouter(cfg RouterConfig) *Router {
 	engine := gin.New()
 
 	r := &Router{
-		engine:         engine,
-		authHandler:    cfg.AuthHandler,
-		noteHandler:    cfg.NoteHandler,
-		syncHandler:    cfg.SyncHandler,
-		uploadHandler:  cfg.UploadHandler,
-		authMiddleware: cfg.AuthMiddleware,
-		logger:         cfg.Logger,
+		engine:          engine,
+		authHandler:     cfg.AuthHandler,
+		noteHandler:     cfg.NoteHandler,
+		syncHandler:     cfg.SyncHandler,
+		uploadHandler:   cfg.UploadHandler,
+		authMiddleware:  cfg.AuthMiddleware,
+		rateLimiter:     cfg.RateLimiter,
+		rateLimitEnable: cfg.RateLimitEnable,
+		logger:          cfg.Logger,
 	}
 
 	r.setupMiddleware()
@@ -58,6 +64,10 @@ func (r *Router) setupMiddleware() {
 	r.engine.Use(middleware.RequestID())
 	r.engine.Use(middleware.Logger(r.logger))
 	r.engine.Use(middleware.CORS())
+
+	if r.rateLimitEnable && r.rateLimiter != nil {
+		r.engine.Use(r.rateLimiter.Limit())
+	}
 }
 
 func (r *Router) setupRoutes() {
