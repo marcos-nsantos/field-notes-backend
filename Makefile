@@ -82,6 +82,7 @@ tidy:
 mocks:
 	mockgen -source=internal/adapter/repository/interfaces.go -destination=internal/mocks/repository_mocks.go -package=mocks
 	mockgen -source=internal/adapter/storage/interfaces.go -destination=internal/mocks/storage_mocks.go -package=mocks
+	mockgen -source=internal/adapter/handler/interfaces.go -destination=internal/mocks/handler_mocks.go -package=mocks
 
 # Full check before commit
 check: fmt lint test

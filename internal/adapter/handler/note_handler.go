@@ -16,10 +16,10 @@ import (
 )
 
 type NoteHandler struct {
-	noteSvc *note.Service
+	noteSvc NoteService
 }
 
-func NewNoteHandler(noteSvc *note.Service) *NoteHandler {
+func NewNoteHandler(noteSvc NoteService) *NoteHandler {
 	return &NoteHandler{noteSvc: noteSvc}
 }
 

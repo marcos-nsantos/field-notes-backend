@@ -15,10 +15,10 @@ import (
 )
 
 type SyncHandler struct {
-	syncSvc *sync.Service
+	syncSvc SyncService
 }
 
-func NewSyncHandler(syncSvc *sync.Service) *SyncHandler {
+func NewSyncHandler(syncSvc SyncService) *SyncHandler {
 	return &SyncHandler{syncSvc: syncSvc}
 }
 

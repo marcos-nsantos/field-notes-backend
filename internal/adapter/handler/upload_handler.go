@@ -16,10 +16,10 @@ import (
 const maxUploadSize = 10 << 20 // 10MB
 
 type UploadHandler struct {
-	uploadSvc *upload.Service
+	uploadSvc UploadService
 }
 
-func NewUploadHandler(uploadSvc *upload.Service) *UploadHandler {
+func NewUploadHandler(uploadSvc UploadService) *UploadHandler {
 	return &UploadHandler{uploadSvc: uploadSvc}
 }
 
