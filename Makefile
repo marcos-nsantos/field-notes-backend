@@ -1,4 +1,4 @@
-.PHONY: build run test lint clean docker-up docker-down migrate-up migrate-down
+.PHONY: build run test test-unit test-integration lint clean docker-up docker-down migrate-up migrate-down mocks
 
 # Go parameters
 BINARY_NAME=api
@@ -12,9 +12,17 @@ build:
 run:
 	go run $(MAIN_PATH)
 
-# Run tests
+# Run all tests
 test:
 	go test -v -race -cover ./...
+
+# Run unit tests only (exclude integration tests)
+test-unit:
+	go test -v -race -cover -short ./...
+
+# Run integration tests only
+test-integration:
+	go test -v -race -run Integration ./...
 
 # Run tests with coverage report
 test-coverage:
@@ -64,14 +72,16 @@ tools:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	go install go.uber.org/mock/mockgen@latest
 
 # Tidy dependencies
 tidy:
 	go mod tidy
 
-# Generate mocks (if using mockery)
+# Generate mocks using uber-go/mock
 mocks:
-	mockery --all --with-expecter --output=./mocks
+	mockgen -source=internal/adapter/repository/interfaces.go -destination=internal/mocks/repository_mocks.go -package=mocks
+	mockgen -source=internal/adapter/storage/interfaces.go -destination=internal/mocks/storage_mocks.go -package=mocks
 
 # Full check before commit
 check: fmt lint test
