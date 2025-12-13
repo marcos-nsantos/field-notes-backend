@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgis/postgis:18-3.6-alpine
+    container_name: fieldnotes-postgres
+    environment:
+      POSTGRES_USER: fieldnotes
+      POSTGRES_PASSWORD: fieldnotes
+      POSTGRES_DB: fieldnotes
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fieldnotes"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: fieldnotes-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  createbucket:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      mc mb myminio/fieldnotes --ignore-existing;
+      mc anonymous set public myminio/fieldnotes;
+      exit 0;
+      "
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fieldnotes-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - ENVIRONMENT=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=fieldnotes
+      - DB_PASSWORD=fieldnotes
+      - DB_NAME=fieldnotes
+      - DB_SSL_MODE=disable
+      - JWT_SECRET_KEY=dev-secret-key-change-in-production
+      - S3_ENDPOINT=http://minio:9000
+      - S3_BUCKET=fieldnotes
+      - S3_ACCESS_KEY_ID=minioadmin
+      - S3_SECRET_ACCESS_KEY=minioadmin
+      - S3_USE_PATH_STYLE=true
+      - S3_PUBLIC_URL=http://localhost:9000/fieldnotes
+      - LOG_LEVEL=debug
+      - LOG_FORMAT=console
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:
