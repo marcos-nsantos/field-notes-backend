@@ -1,13 +1,10 @@
 package httputil
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-
-	"github.com/marcos-nsantos/field-notes-backend/internal/pkg/apperror"
 )
 
 type ErrorResponse struct {
@@ -57,19 +54,6 @@ func InternalError(c *gin.Context) {
 		Code:      "INTERNAL_ERROR",
 		RequestID: GetRequestID(c),
 	})
-}
-
-func HandleError(c *gin.Context, err error) {
-	var appErr *apperror.AppError
-	if errors.As(err, &appErr) {
-		c.JSON(appErr.StatusCode, ErrorResponse{
-			Error:     appErr.Message,
-			Code:      appErr.Code,
-			RequestID: GetRequestID(c),
-		})
-		return
-	}
-	InternalError(c)
 }
 
 func GetUserID(c *gin.Context) uuid.UUID {
