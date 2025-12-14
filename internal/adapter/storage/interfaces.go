@@ -14,5 +14,5 @@ type ImageStorage interface {
 }
 
 type ImageProcessor interface {
-	Process(reader io.Reader, mimeType string) (io.Reader, int64, int, int, error)
+	Process(reader io.Reader) (io.Reader, int64, int, int, error)
 }

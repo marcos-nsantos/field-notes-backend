@@ -65,7 +65,7 @@ func (s *Service) Upload(ctx context.Context, input UploadInput) (*UploadResult,
 		return nil, domain.ErrNoteNotFound
 	}
 
-	processedReader, finalSize, width, height, err := s.imageProcessor.Process(input.File, input.ContentType)
+	processedReader, finalSize, width, height, err := s.imageProcessor.Process(input.File)
 	if err != nil {
 		return nil, fmt.Errorf("processing image: %w", err)
 	}

@@ -38,7 +38,7 @@ func TestService_Upload(t *testing.T) {
 		processedReader := bytes.NewReader(processedContent)
 
 		noteRepo.EXPECT().GetByID(ctx, noteID).Return(note, nil)
-		imageProcessor.EXPECT().Process(gomock.Any(), "image/jpeg").Return(processedReader, int64(len(processedContent)), 800, 600, nil)
+		imageProcessor.EXPECT().Process(gomock.Any()).Return(processedReader, int64(len(processedContent)), 800, 600, nil)
 		storage.EXPECT().Upload(ctx, gomock.Any(), processedReader, "image/jpeg", int64(len(processedContent))).Return(nil)
 		storage.EXPECT().GetURL(gomock.Any()).Return("http://storage/photo.jpg")
 		storage.EXPECT().GetSignedURL(gomock.Any(), 24*time.Hour).Return("http://storage/photo.jpg?signed=1", nil)
@@ -168,7 +168,7 @@ func TestService_Upload(t *testing.T) {
 		processedReader := bytes.NewReader([]byte("processed"))
 
 		noteRepo.EXPECT().GetByID(ctx, noteID).Return(note, nil)
-		imageProcessor.EXPECT().Process(gomock.Any(), "image/jpeg").Return(processedReader, int64(9), 800, 600, nil)
+		imageProcessor.EXPECT().Process(gomock.Any()).Return(processedReader, int64(9), 800, 600, nil)
 		storageClient.EXPECT().Upload(ctx, gomock.Any(), processedReader, "image/jpeg", int64(9)).Return(nil)
 		storageClient.EXPECT().GetURL(gomock.Any()).Return("http://storage/photo.jpg")
 		storageClient.EXPECT().GetSignedURL(gomock.Any(), 24*time.Hour).Return("http://storage/photo.jpg?signed=1", nil)

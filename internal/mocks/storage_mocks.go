@@ -124,9 +124,9 @@ func (m *MockImageProcessor) EXPECT() *MockImageProcessorMockRecorder {
 }
 
 // Process mocks base method.
-func (m *MockImageProcessor) Process(reader io.Reader, mimeType string) (io.Reader, int64, int, int, error) {
+func (m *MockImageProcessor) Process(reader io.Reader) (io.Reader, int64, int, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Process", reader, mimeType)
+	ret := m.ctrl.Call(m, "Process", reader)
 	ret0, _ := ret[0].(io.Reader)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(int)
@@ -136,7 +136,7 @@ func (m *MockImageProcessor) Process(reader io.Reader, mimeType string) (io.Read
 }
 
 // Process indicates an expected call of Process.
-func (mr *MockImageProcessorMockRecorder) Process(reader, mimeType any) *gomock.Call {
+func (mr *MockImageProcessorMockRecorder) Process(reader any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Process", reflect.TypeOf((*MockImageProcessor)(nil).Process), reader, mimeType)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Process", reflect.TypeOf((*MockImageProcessor)(nil).Process), reader)
 }

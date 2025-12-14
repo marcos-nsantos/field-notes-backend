@@ -31,7 +31,7 @@ func NewImageProcessor() *ImageProcessorImpl {
 	}
 }
 
-func (p *ImageProcessorImpl) Process(reader io.Reader, mimeType string) (io.Reader, int64, int, int, error) {
+func (p *ImageProcessorImpl) Process(reader io.Reader) (io.Reader, int64, int, int, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, 0, 0, 0, fmt.Errorf("reading image: %w", err)
